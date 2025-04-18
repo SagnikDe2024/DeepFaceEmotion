@@ -2,8 +2,8 @@ from io import BytesIO
 
 from fastapi import FastAPI, UploadFile
 from fastapi.requests import Request
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.templating import Jinja2Templates
 
 from image_processing.detect_faces_emotion import DetectFaces
 
@@ -11,25 +11,23 @@ app = FastAPI()
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-savedFiles : dict[str, BytesIO] = {}
-bounding_boxes : dict[str, list] = {}
+savedFiles: dict[str, BytesIO] = {}
+bounding_boxes: dict[str, list] = {}
 templates = Jinja2Templates(directory="templates")
 detect_faces = DetectFaces()
 
-def allowed_file(filename : str):
+
+def allowed_file(filename: str):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-
 @app.get("/", response_class=HTMLResponse)
-async def root(request : Request):
-	return templates.TemplateResponse(
-			"upload.html",
-			{"request": request, "image_list": list(savedFiles.keys())}
-	)
+async def root(request: Request):
+	return templates.TemplateResponse("upload.html", {"request": request, "image_list": list(savedFiles.keys())})
+
 
 @app.post("/", response_class=HTMLResponse)
-async def upload_file(request: Request,file: UploadFile):
+async def upload_file(request: Request, file: UploadFile):
 
 	if file and allowed_file(file.filename):
 		filename = file.filename
@@ -45,22 +43,10 @@ async def upload_file(request: Request,file: UploadFile):
 		savedFiles[filename] = image_data
 		bounding_boxes[filename] = face_bounding_boxes
 
-
-
-		return templates.TemplateResponse(
-				"upload.html",
-				{
-						"request"   : request,
-						"filename"  : filename,
-						"image_list": list(savedFiles.keys())
-				}
-		)
+		return templates.TemplateResponse("upload.html",
+				{"request": request, "filename": filename, "image_list": list(savedFiles.keys())})
 	else:
-		return templates.TemplateResponse(
-				"upload.html",
-				{"request": request, "error": "File type not allowed"}
-		)
-
+		return templates.TemplateResponse("upload.html", {"request": request, "error": "File type not allowed"})
 
 
 @app.get("/bbox/{filename}")
@@ -76,7 +62,6 @@ async def get_emotions(filename: str):
 	return emotion
 
 
-
 @app.get("/image/{filename}")
 async def get_image(filename: str):
 
@@ -86,12 +71,4 @@ async def get_image(filename: str):
 	image_data = savedFiles[filename]
 	image_data.seek(0)
 
-
-	# Determine content type based on file extension
-	extension = filename.split('.')[-1].lower()
-	# content_type = f"image/{extension}"
-	# if extension == 'jpg':
-	# 	content_type = "image/jpeg"
-
 	return StreamingResponse(image_data, media_type="image/*")
-
