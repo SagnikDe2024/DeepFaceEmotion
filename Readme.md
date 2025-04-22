@@ -48,13 +48,13 @@ DeepFaceEmotion/
 1. Make sure your Conda environment is activated:
 
 ```
-bash conda activate DeepFaceEmotionEnv
+conda activate DeepFaceEmotionEnv
 ``` 
 
 2. Run the application:
 
 ```
-bash python main.py
+uvicorn main:app
 ``` 
 
 3. Access the web interface through your browser (the address will be shown in the console when you run the application)
